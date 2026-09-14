@@ -1,0 +1,100 @@
+---
+title: "Delta Carbon Synthesis: Soil, Land Use, and Flux"
+author: "Caron Synthesis Working Group"
+format:
+  dashboard:
+    theme: cosmo
+    orientation: rows
+    expandable: true
+    scrolling: false
+    nav-buttons:
+      - icon: gitlab
+        href: https://gitlab.com/
+---
+
+```{r library}
+#| label: load packages
+
+library(here)
+library(readr)
+library(dplyr)
+library(lubridate)
+library(plotly)
+library(DT)
+library(boxr)
+library(leaflet)
+```
+
+
+```{r load data}
+#| include: false
+
+
+#usethis::edit_r_environ()
+box_auth()
+
+box_fetch(
+  dir_id = '392885596000', # this downloads all the files in the "clean" data folder 
+  local_dir = file.path('data'), #setting in the data folder
+  recursive = TRUE,
+  overwrite = FALSE,
+  delete = FALSE
+)
+
+carbon_storage_hist_r <- terra::rast(here('data/carbon_storage_hist.tif'))
+carbon_storage_mod_r <- terra::rast(here('data/carbon_storage_mod.tif'))
+```
+
+
+# About
+
+For the last two-hundred years, extensive wetland loss in the Sacramento-San Joaquin Delta (Delta) has turned the region from a carbon sink into a major source of greenhouse gas (GHG) emissions. More recently, research on lands converted to restored aquatic habitats and rice have shown the potential for successfully reducing GHG emissions over time, providing a route to net negative emissions while providing additional ecosystem benefits to wildlife and water management. Understanding areas that are most optimal for preserving soil carbon stocks and restoring net atmospheric CO2 gas fluxes into soils is important information for land managers, planners, and decision-makers alike who all influence how and where investment in carbon projects occur in the Delta region.  
+
+While the Delta is a highly researched ecosystem, much of the carbon-related information is spread across different repositories, data owners, and reports. Additionally, with the emerging voluntary carbon market, carbon management data is often privately owned and not openly available to the public or interested parties. Our project aims goal is to synthesize relevant and available land use, biogeochemical, and policy data on an open source platform. The intended outcome of this open source platform is to inform prioritization of land conversion and restoration projects across the Delta, while making access to the carbon market more equitable.  
+
+We have started synthesizing available spatial data in the Delta including soil organic matter content, organic soil thickness, peat thickness, and land management with available GHG emissions (including carbon dioxide, methane, and nitrous oxide) from the Subsidence Calculation model (SUBCALC).  
+
+
+# Carbon Map
+
+## Row {.tabset}
+
+```{r}
+#| title: "Historical Carbon Storage"
+#| message: false
+#| warning: false
+#| echo: false
+
+# Historical
+r_proj <- terra::project(carbon_storage_hist_r, "EPSG:4326")
+
+# reduce resolution by a factor (2x2 cells -> 1)
+r_proj_small <- terra::aggregate(r_proj, fact = 2, fun = "mean")
+
+pal <- colorNumeric(c("#0C2C84", "#41B6C4", "#FFFFCC"), terra::values(r_proj_small), na.color = "transparent")
+
+leaflet() %>%
+  addProviderTiles(providers$Esri.WorldTopoMap) %>%
+  addRasterImage(r_proj_small, colors = pal, opacity = 0.8) %>%
+  addLegend(pal = pal, values = terra::values(r_proj_small), title = "Historical Carbon Storage")
+```
+
+```{r}
+#| title: "Modern Carbon Storage"
+#| message: false
+#| warning: false
+#| echo: false
+
+
+r_proj <- terra::project(carbon_storage_mod_r, "EPSG:4326")
+
+# reduce resolution by a factor (2x2 cells -> 1)
+r_proj_small <- terra::aggregate(r_proj, fact = 2, fun = "mean")
+
+pal <- colorNumeric(c("#0C2C84", "#41B6C4", "#FFFFCC"), terra::values(r_proj_small), na.color = "transparent")
+
+leaflet() %>%
+  addProviderTiles(providers$Esri.WorldTopoMap) %>%
+  addRasterImage(r_proj_small, colors = pal, opacity = 0.8) %>%
+  addLegend(pal = pal, values = terra::values(r_proj_small), title = "Modern Carbon Storage")
+```
