@@ -1,114 +1,16 @@
 ---
-title: "Delta Carbon Synthesis"
-author: "Carbon Synthesis Working Group"
+title: "Delta Carbon Dashboard"
 format:
-  dashboard:
-    theme: cosmo
-    orientation: rows
-    expandable: true
-    scrolling: false
-    nav-buttons:
-      - icon: gitlab
-        href: https://gitlab.com/your-org/delta-carbon-synthesis
-        text: "Project repo"
-execute:
-  echo: false
-  warning: false
-  message: false
-  freeze: auto
+  html:
+    include-in-header:
+      text: |
+        <meta http-equiv="refresh" content="0; url=dashboard.html">
 ---
 
-```{r}
-#| label: load-packages
-
-library(here)
-library(dplyr)
-library(plotly)
-library(boxr)
-library(leaflet)
-library(terra)
+```{=html}
+<script>
+  window.location.replace("dashboard.html");
+</script>
 ```
 
-```{r}
-#| label: load-data
-#| include: false
-
-# usethis::edit_r_environ()
-box_auth()
-
-box_fetch(
-  dir_id = "392885596000", # downloads all files in the "clean" data folder
-  local_dir = file.path("data"),
-  recursive = TRUE,
-  overwrite = FALSE,
-  delete = FALSE
-)
-
-carbon_storage_hist_r <- terra::rast(here("data/carbon_storage_hist.tif"))
-carbon_storage_mod_r  <- terra::rast(here("data/carbon_storage_mod.tif"))
-```
-
-```{r}
-#| label: prep-rasters
-#| include: false
-
-# Reproject + downsample both rasters once, up front, so the two map chunks below don't repeat this work and so the color scale can be shared
-prep_raster <- function(r, fact = 2) {
-  r |>
-    terra::project("EPSG:4326") |>
-    terra::aggregate(fact = fact, fun = "mean")
-}
-
-hist_proj <- prep_raster(carbon_storage_hist_r)
-mod_proj  <- prep_raster(carbon_storage_mod_r)
-
-# Shared color domain across both maps so the legend means the same thing in both panels and the two are visually comparable.
-shared_range <- range(
-  c(terra::values(hist_proj), terra::values(mod_proj)),
-  na.rm = TRUE
-)
-
-carbon_pal <- leaflet::colorNumeric(
-  palette  = c("#0C2C84", "#41B6C4", "#FFFFCC"),
-  domain   = shared_range,
-  na.color = "transparent"
-)
-
-# Small helper so the two map chunks are a one-liner each instead of duplicated leaflet pipelines.
-# NOTE: project defaults to TRUE in addRasterImage(), which is correct here since hist_proj/mod_proj are in EPSG:4326, not pre-projected to 3857.
-make_carbon_map <- function(raster, label) {
-  leaflet() |>
-    addProviderTiles(providers$Esri.WorldTopoMap) |>
-    addRasterImage(raster, colors = carbon_pal, opacity = 0.8) |>
-    addLegend(
-      pal    = carbon_pal,
-      values = shared_range,
-      title  = htmltools::HTML(paste0(label, "<br><small>Mg C / ha</small>")),
-      position = "bottomright"
-    ) |>
-    addScaleBar(position = "bottomleft")
-}
-```
-
-# About
-
-For the last two-hundred years, extensive wetland loss in the Sacramento-San Joaquin Delta (Delta) has turned the region from a carbon sink into a major source of greenhouse gas (GHG) emissions. More recently, research on lands converted to restored aquatic habitats and rice has shown the potential for successfully reducing GHG emissions over time, providing a route to net negative emissions while providing additional ecosystem benefits to wildlife and water management. Understanding areas that are most optimal for preserving soil carbon stocks and restoring net atmospheric CO2 gas fluxes into soils is important information for land managers, planners, and decision-makers alike who all influence how and where investment in carbon projects occur in the Delta region.
-
-While the Delta is a highly researched ecosystem, much of the carbon-related information is spread across different repositories, data owners, and reports. Additionally, with the emerging voluntary carbon market, carbon management data is often privately owned and not openly available to the public or interested parties. Our project goal is to synthesize relevant and available land use, biogeochemical, and policy data on an open-source platform. The intended outcome of this open-source platform is to inform prioritization of land conversion and restoration projects across the Delta, while making access to the carbon market more equitable.  
-
-We have started synthesizing available carbon management and land use data in the Delta, and one large gap is an open access map of carbon stocks across the Delta. While the Subsidence Calculation model (SUBCALC) offers Delta-wide maps for soil organic matter content, organic soil thickness, peat thickness, and land management with available GHG emissions (including carbon dioxide, methane, and nitrous oxide), the model and data are not publicly available or able to be validated by an external party.  
-
-
-# Carbon Map
-
-## Row {.tabset}
-
-```{r}
-#| title: "Historical Carbon Storage"
-make_carbon_map(hist_proj, "Historical Carbon Storage")
-```
-
-```{r}
-#| title: "Modern Carbon Storage"
-make_carbon_map(mod_proj, "Modern Carbon Storage")
-```
+If you are not redirected automatically, [click here to view the dashboard](dashboard.html).
