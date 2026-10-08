@@ -112,3 +112,4 @@ make_carbon_map(hist_proj, "Historical Carbon Storage")
 #| title: "Modern Carbon Storage"
 make_carbon_map(mod_proj, "Modern Carbon Storage")
 ```
+
