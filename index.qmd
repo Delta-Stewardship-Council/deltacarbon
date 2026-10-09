@@ -103,12 +103,12 @@ We have started synthesizing available carbon management and land use data in th
 
 ## Row {.tabset}
 
-```{r}
+```{r hist-map}
 #| title: "Historical Carbon Storage"
 make_carbon_map(hist_proj, "Historical Carbon Storage")
 ```
 
-```{r}
+```{r mod-map}
 #| title: "Modern Carbon Storage"
 make_carbon_map(mod_proj, "Modern Carbon Storage")
 ```
